@@ -1,27 +1,42 @@
 from fastapi import FastAPI
-import tensorflow as tf
 import numpy as np
 import os
+import tensorflow as tf
 
 from backend.database import SessionLocal, Prediction
 
 app = FastAPI()
 
 # -----------------------------
-# Load AI models safely
+# MODEL PATHS
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AI_DIR = os.path.join(BASE_DIR, "..", "ai")
 
-expiry_model = tf.keras.models.load_model(
-    os.path.join(AI_DIR, "expiry_model.h5")
-)
-
-shortage_model = tf.keras.models.load_model(
-    os.path.join(AI_DIR, "shortage_model.h5")
-)
+expiry_model = None
+shortage_model = None
 
 
+# -----------------------------
+# LOAD MODELS LAZILY
+# -----------------------------
+def load_models():
+    global expiry_model, shortage_model
+
+    if expiry_model is None:
+        expiry_model = tf.keras.models.load_model(
+            os.path.join(AI_DIR, "expiry_model.h5")
+        )
+
+    if shortage_model is None:
+        shortage_model = tf.keras.models.load_model(
+            os.path.join(AI_DIR, "shortage_model.h5")
+        )
+
+
+# -----------------------------
+# ROUTES
+# -----------------------------
 @app.get("/")
 def home():
     return {"message": "MediFlow AI is running"}
@@ -30,9 +45,8 @@ def home():
 @app.post("/predict")
 def predict(data: dict):
 
-    # -----------------------------
-    # Prepare input
-    # -----------------------------
+    load_models()  # <-- IMPORTANT FIX
+
     x = np.array([[
         data["quantity"],
         data["usage"],
@@ -40,15 +54,9 @@ def predict(data: dict):
         data["cost"]
     ]])
 
-    # -----------------------------
-    # AI predictions
-    # -----------------------------
     expiry = float(expiry_model.predict(x)[0][0])
     shortage = float(shortage_model.predict(x)[0][0])
 
-    # -----------------------------
-    # Decision Engine
-    # -----------------------------
     expiry_action = (
         "MOVE / REDISTRIBUTE" if expiry > 0.8 else
         "MONITOR" if expiry > 0.5 else
@@ -61,9 +69,6 @@ def predict(data: dict):
         "SUFFICIENT"
     )
 
-    # -----------------------------
-    # Save to database
-    # -----------------------------
     db = SessionLocal()
 
     record = Prediction(
@@ -81,15 +86,14 @@ def predict(data: dict):
     db.commit()
     db.close()
 
-    # -----------------------------
-    # Return response
-    # -----------------------------
     return {
         "expiry_risk": expiry,
         "shortage_risk": shortage,
         "expiry_action": expiry_action,
         "shortage_action": shortage_action
     }
+
+
 @app.get("/history")
 def history():
     db = SessionLocal()
@@ -111,12 +115,13 @@ def history():
         })
 
     db.close()
-
     return result
 
-import os
 
+# -----------------------------
+# LOCAL RUN (ignored in Render)
+# -----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
     import uvicorn
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
