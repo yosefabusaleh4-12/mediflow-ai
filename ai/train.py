@@ -17,7 +17,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 expiry_model = tf.keras.Sequential([
-    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(4,)),
     tf.keras.layers.Dense(8, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
@@ -30,7 +30,7 @@ expiry_model.compile(
 
 expiry_model.fit(X_train, y_train, epochs=30, verbose=0)
 
-# ✅ SAVE IN MODERN FORMAT
+# SAVE .keras MODEL
 expiry_model.save("expiry_model.keras")
 
 
@@ -44,7 +44,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 shortage_model = tf.keras.Sequential([
-    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(4,)),
     tf.keras.layers.Dense(8, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
@@ -57,7 +57,7 @@ shortage_model.compile(
 
 shortage_model.fit(X_train, y_train, epochs=30, verbose=0)
 
-# ✅ SAVE IN MODERN FORMAT
+# SAVE .keras MODEL
 shortage_model.save("shortage_model.keras")
 
-print("BOTH MODELS TRAINED SUCCESSFULLY (Keras format)")
+print("MODELS TRAINED SUCCESSFULLY")

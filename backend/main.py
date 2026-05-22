@@ -18,19 +18,21 @@ shortage_model = None
 
 
 # -----------------------------
-# LOAD MODELS (CLEAN .keras ONLY)
+# LOAD MODELS (FIXED - IMPORTANT)
 # -----------------------------
 def load_models():
     global expiry_model, shortage_model
 
     if expiry_model is None:
         expiry_model = tf.keras.models.load_model(
-            os.path.join(AI_DIR, "expiry_model.keras")
+            os.path.join(AI_DIR, "expiry_model.keras"),
+            compile=False
         )
 
     if shortage_model is None:
         shortage_model = tf.keras.models.load_model(
-            os.path.join(AI_DIR, "shortage_model.keras")
+            os.path.join(AI_DIR, "shortage_model.keras"),
+            compile=False
         )
 
 
