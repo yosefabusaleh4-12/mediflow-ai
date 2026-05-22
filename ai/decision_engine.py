@@ -1,9 +1,10 @@
 import tensorflow as tf
 import numpy as np
 
-# Load models
-expiry_model = tf.keras.models.load_model("expiry_model.h5")
-shortage_model = tf.keras.models.load_model("shortage_model.h5")
+# Load models (CLEAN .keras VERSION)
+expiry_model = tf.keras.models.load_model("expiry_model.keras")
+shortage_model = tf.keras.models.load_model("shortage_model.keras")
+
 
 def predict(medicine_data):
     """
@@ -12,35 +13,37 @@ def predict(medicine_data):
 
     data = np.array([medicine_data])
 
-    expiry_risk = expiry_model.predict(data)[0][0]
-    shortage_risk = shortage_model.predict(data)[0][0]
-
-    print("\n--- AI ANALYSIS ---")
-    print("Expiry Risk:", round(expiry_risk, 3))
-    print("Shortage Risk:", round(shortage_risk, 3))
+    expiry_risk = float(expiry_model.predict(data)[0][0])
+    shortage_risk = float(shortage_model.predict(data)[0][0])
 
     # =========================
-    # DECISION LOGIC (THE MAGIC)
+    # DECISION ENGINE
     # =========================
 
     if expiry_risk > 0.8:
-        action1 = "⚠ MOVE OUT OR REDISTRIBUTE (High expiry risk)"
+        expiry_action = "MOVE / REDISTRIBUTE"
     elif expiry_risk > 0.5:
-        action1 = "📦 Monitor closely"
+        expiry_action = "MONITOR"
     else:
-        action1 = "✅ Safe stock"
+        expiry_action = "SAFE"
 
     if shortage_risk > 0.8:
-        action2 = "🚨 URGENT RESTOCK REQUIRED"
+        shortage_action = "URGENT RESTOCK"
     elif shortage_risk > 0.5:
-        action2 = "⚠ Prepare restocking"
+        shortage_action = "PREPARE RESTOCK"
     else:
-        action2 = "✅ Stock is sufficient"
+        shortage_action = "SUFFICIENT"
 
-    print("\n--- RECOMMENDATIONS ---")
-    print(action1)
-    print(action2)
+    # IMPORTANT: return JSON (for FastAPI / Flutter)
+    return {
+        "expiry_risk": expiry_risk,
+        "shortage_risk": shortage_risk,
+        "expiry_action": expiry_action,
+        "shortage_action": shortage_action
+    }
 
 
-# Example test
-predict([50, 20, 30, 10])
+# Optional local test
+if __name__ == "__main__":
+    result = predict([50, 20, 30, 10])
+    print(result)

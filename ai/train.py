@@ -30,7 +30,8 @@ expiry_model.compile(
 
 expiry_model.fit(X_train, y_train, epochs=30, verbose=0)
 
-expiry_model.save("expiry_model.h5")
+# ✅ SAVE IN MODERN FORMAT
+expiry_model.save("expiry_model.keras")
 
 
 # =========================
@@ -56,6 +57,7 @@ shortage_model.compile(
 
 shortage_model.fit(X_train, y_train, epochs=30, verbose=0)
 
-shortage_model.save("shortage_model.h5")
+# ✅ SAVE IN MODERN FORMAT
+shortage_model.save("shortage_model.keras")
 
-print("BOTH MODELS TRAINED SUCCESSFULLY")
+print("BOTH MODELS TRAINED SUCCESSFULLY (Keras format)")

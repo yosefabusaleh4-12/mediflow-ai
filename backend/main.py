@@ -18,34 +18,37 @@ shortage_model = None
 
 
 # -----------------------------
-# LOAD MODELS LAZILY
+# LOAD MODELS (CLEAN .keras ONLY)
 # -----------------------------
 def load_models():
     global expiry_model, shortage_model
 
     if expiry_model is None:
         expiry_model = tf.keras.models.load_model(
-            os.path.join(AI_DIR, "expiry_model.h5")
+            os.path.join(AI_DIR, "expiry_model.keras")
         )
 
     if shortage_model is None:
         shortage_model = tf.keras.models.load_model(
-            os.path.join(AI_DIR, "shortage_model.h5")
+            os.path.join(AI_DIR, "shortage_model.keras")
         )
 
 
 # -----------------------------
-# ROUTES
+# HOME
 # -----------------------------
 @app.get("/")
 def home():
     return {"message": "MediFlow AI is running"}
 
 
+# -----------------------------
+# PREDICT
+# -----------------------------
 @app.post("/predict")
 def predict(data: dict):
 
-    load_models()  # <-- IMPORTANT FIX
+    load_models()
 
     x = np.array([[
         data["quantity"],
@@ -94,10 +97,12 @@ def predict(data: dict):
     }
 
 
+# -----------------------------
+# HISTORY
+# -----------------------------
 @app.get("/history")
 def history():
     db = SessionLocal()
-
     records = db.query(Prediction).all()
 
     result = []
@@ -119,7 +124,7 @@ def history():
 
 
 # -----------------------------
-# LOCAL RUN (ignored in Render)
+# RUN LOCAL
 # -----------------------------
 if __name__ == "__main__":
     import uvicorn
