@@ -1,3 +1,4 @@
+tensorflow
 fastapi
 uvicorn
 numpy
@@ -5,4 +6,3 @@ pandas
 scikit-learn
 joblib
 sqlalchemy
-tensorflow==2.15.0
