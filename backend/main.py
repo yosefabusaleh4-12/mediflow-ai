@@ -3,15 +3,24 @@ import numpy as np
 import os
 import tensorflow as tf
 
-from backend.database import SessionLocal, Prediction
-
 app = FastAPI()
+
+# -----------------------------
+# PATH SETUP (IMPORTANT FIX)
+# -----------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+AI_DIR = os.path.join(BASE_DIR, "..", "ai")
+
+expiry_path = os.path.join(AI_DIR, "expiry_weights.weights.h5")
+shortage_path = os.path.join(AI_DIR, "shortage_weights.weights.h5")
+
 
 # -----------------------------
 # MODEL SETUP
 # -----------------------------
 model_expiry = None
 model_shortage = None
+
 
 def build_model():
     model = tf.keras.Sequential([
@@ -32,16 +41,20 @@ def build_model():
     ])
     return model
 
+
+# -----------------------------
+# LOAD MODELS (FIXED PATH)
+# -----------------------------
 def load_models():
     global model_expiry, model_shortage
 
     if model_expiry is None:
         model_expiry = build_model()
-        model_expiry.load_weights("expiry_weights.weights.h5")
+        model_expiry.load_weights(expiry_path)
 
     if model_shortage is None:
         model_shortage = build_model()
-        model_shortage.load_weights("shortage_weights.weights.h5")
+        model_shortage.load_weights(shortage_path)
 
 
 # -----------------------------
@@ -51,17 +64,23 @@ def load_models():
 def home():
     return {"message": "AI running"}
 
+
 @app.post("/predict")
 def predict(data: dict):
 
     load_models()
 
-    x = np.array([[data["quantity"], data["usage"], data["days_left"], data["cost"]]])
+    x = np.array([[
+        data["quantity"],
+        data["usage"],
+        data["days_left"],
+        data["cost"]
+    ]])
 
     expiry = float(model_expiry.predict(x)[0][0])
     shortage = float(model_shortage.predict(x)[0][0])
 
     return {
-        "expiry_risk": expiry,
-        "shortage_risk": shortage,
+        "expiry_risk": round(expiry, 2),
+        "shortage_risk": round(shortage, 2),
     }
