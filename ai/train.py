@@ -2,22 +2,26 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 # Load dataset
 data = pd.read_csv(
     r"C:\Users\HP\Desktop\mediflow-ai\datasets\data.csv"
 )
 
-X = data[["quantity","usage","days_left","cost"]]
+X = data[["quantity", "usage", "days_left", "cost"]]
 
 # =========================
-# NORMALIZATION
+# SCALING (IMPORTANT FIX)
 # =========================
 scaler = MinMaxScaler()
 X_scaled = scaler.fit_transform(X)
 
+# SAVE SCALER (IMPORTANT)
+joblib.dump(scaler, "scaler.save")
+
 # =========================
-# STRONG MODEL ARCHITECTURE
+# MODEL ARCHITECTURE
 # =========================
 def build_model():
     return tf.keras.Sequential([
@@ -34,7 +38,6 @@ def build_model():
         tf.keras.layers.Dropout(0.3),
 
         tf.keras.layers.Dense(16, activation='relu'),
-
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
 
@@ -50,18 +53,12 @@ X_train, X_test, y_train, y_test = train_test_split(
 expiry_model = build_model()
 
 expiry_model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.Adam(0.001),
     loss="binary_crossentropy",
     metrics=["accuracy"]
 )
 
-expiry_model.fit(
-    X_train,
-    y_train,
-    epochs=200,
-    batch_size=16,
-    verbose=1
-)
+expiry_model.fit(X_train, y_train, epochs=200, batch_size=16, verbose=1)
 
 expiry_model.save_weights("expiry_weights.weights.h5")
 
@@ -77,19 +74,13 @@ X_train, X_test, y_train, y_test = train_test_split(
 shortage_model = build_model()
 
 shortage_model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.Adam(0.001),
     loss="binary_crossentropy",
     metrics=["accuracy"]
 )
 
-shortage_model.fit(
-    X_train,
-    y_train,
-    epochs=200,
-    batch_size=16,
-    verbose=1
-)
+shortage_model.fit(X_train, y_train, epochs=200, batch_size=16, verbose=1)
 
 shortage_model.save_weights("shortage_weights.weights.h5")
 
-print("🔥 STRONG MODEL TRAINING COMPLETE")
+print("🔥 TRAINING COMPLETE")
