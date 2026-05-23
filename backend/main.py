@@ -80,13 +80,33 @@ def predict(data: dict):
         data["cost"]
     ]])
 
-    # 🔥 IMPORTANT FIX
+    # scale input
     x = scaler.transform(x)
 
     expiry = float(model_expiry.predict(x)[0][0])
     shortage = float(model_shortage.predict(x)[0][0])
 
+    # =========================
+    # DECISION ENGINE (FIXED)
+    # =========================
+
+    if expiry > 0.8:
+        expiry_action = "MOVE / REDISTRIBUTE"
+    elif expiry > 0.5:
+        expiry_action = "MONITOR"
+    else:
+        expiry_action = "SAFE"
+
+    if shortage > 0.8:
+        shortage_action = "URGENT RESTOCK"
+    elif shortage > 0.5:
+        shortage_action = "PREPARE RESTOCK"
+    else:
+        shortage_action = "SUFFICIENT"
+
     return {
         "expiry_risk": round(expiry, 2),
-        "shortage_risk": round(shortage, 2)
+        "shortage_risk": round(shortage, 2),
+        "expiry_action": expiry_action,
+        "shortage_action": shortage_action
     }
